@@ -1,0 +1,30 @@
+Follow the step by step command and run as powershell script
+
+=================================================================================
+
+param (
+    [Parameter(Mandatory=$True,Position=0)]$SampleName=$env:computername,
+    [Parameter(Mandatory=$False,Position=1)]$NumSamples=[int]1,
+    [Parameter(Mandatory=$False,Position=2)]$SampleInterval=[int]15
+)
+
+$scriptpath = Split-Path $MyInvocation.MyCommand.Path -Parent
+$samplelimit = [int]$NumSamples
+$logpath = "$scriptpath\Output\$SampleName"
+
+if (!(test-path $logpath)) {New-Item $logpath -ItemType Directory -Force | out-null}
+
+$samplecount = [int]0
+while ($samplecount -lt $samplelimit) {
+    $date = get-date
+    $datetimestamp = [string](get-date -Format yyyyMMdd-HHmmss)
+    $CpuCores = Get-WMIObject Win32_ComputerSystem| Select-Object -ExpandProperty NumberOfLogicalProcessors
+    $Samples = Get-Counter “\Process(*)\% Processor Time” | Select-Object -ExpandProperty CounterSamples
+    $Samples | Select `InstanceName,@{Name=”CPU %”;Expression={[Decimal]::Round(($_.CookedValue / $CpuCores), 2)}} | Sort-Object -property 'CPU %' -Descending | Select-Object -Property @{Name = 'SampleTime'; Expression = {[string]$date}},*| Export-Csv "$logpath\CPU_$env:computername`_$datetimestamp.csv" -Force -NoTypeInformation
+    
+    Get-WmiObject Win32_Process | Select-Object ProcessName,ProcessID,CommandLine | Export-Csv "$logpath\ProcessDetails_$env:computername`_$datetimestamp.csv" -Force -NoTypeInformation
+
+    $samplecount = $samplecount + 1
+    start-sleep $SampleInterval
+
+}
