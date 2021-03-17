@@ -1,0 +1,27 @@
+Simple commands in the batch file to get it by one click. 
+
+StartTrace.bat
+
+mkdir c:\Client_logs
+mkdir c:\Client_logs\perflogs
+nltest /dbflag:2080ffff
+netsh trace start capture=yes report=no persistent=yes filemode=circular overwrite=yes tracefile=c:\Client_logs\netcap_Client.cap maxsize=600MB
+logman delete PerfLogLong
+logman delete PerfLogShort
+Logman.exe create counter PerfLogLong -o "c:\Client_logs\perflogs\PerfLogLong.blg" -f bincirc -v mmddhhmm -max 500 -c "\LogicalDisk(*)\*" "\Memory\*" "\Cache\*" "\Network Interface(*)\*" "\NTDS(*)\*" "\Netlogon(*)\*" "\Paging File(*)\*" "\PhysicalDisk(*)\*" "\Processor(*)\*" "\Processor Information(*)\*" "\Process(*)\*" "\Redirector\*" "\Server\*" "\System\*" "\Server Work Queues(*)\*" -si 00:05:00            
+Logman.exe create counter PerfLogShort -o "c:\Client_logs\perflogs\PerfLogShort.blg" -f bincirc -v mmddhhmm -max 500 -c "\LogicalDisk(*)\*" "\Memory\*" "\Cache\*" "\Network Interface(*)\*" "\NTDS(*)\*" "\Netlogon(*)\*" "\Paging File(*)\*" "\PhysicalDisk(*)\*" "\Processor(*)\*" "\Processor Information(*)\*" "\Process(*)\*" "\Redirector\*" "\Server\*" "\System\*" "\Server Work Queues(*)\*" -si 00:00:03
+logman start PerfLogLong
+logman start PerfLogShort
+
+ 
+
+StopTrace bat :
+
+logman stop PerfLogLong
+logman stop PerfLogShort
+copy /y %windir%\debug\netlogon.* c:\Client_logs
+wevtutil.exe export-log APPLICATION c:\Client_logs\Application.evtx /overwrite:true
+wevtutil.exe export-log SYSTEM c:\Client_logs\System.evtx /overwrite:true
+netsh trace stop
+systeminfo > c:\Client_logs\systeminfo.txt
+netstat -bano > c:\Client_logs\netstat.txt
