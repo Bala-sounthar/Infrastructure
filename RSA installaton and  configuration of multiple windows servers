@@ -1,0 +1,72 @@
+Please follow the below powershell command instruction to run and save as .ps1
+
+==============================================================
+
+<#
+Script title : Automated RSA installation and Enable the required security group on multiple servers, the script include
+1.    RSA installation.
+2.    The  “server.cer”  file  and  “sdconf.rec”  file configured as single pack using configuration wizard.
+3.    Reserve password update.
+4.    Security group update as per the user request through already exported reg. file or manually created file for security group.
+5.    RSA enable/disable/any special security groups as per the user request.
+6.    After install RSA on the particular server through the (.msi) file,   the msi file will remove it automatically from the particular server.
+7.    After install RSA on the particular server,  the exported registry file (.reg) or you can created manual file for security group file also removed on the particular server.
+
+#>
+
+$servers = get-content D:\data\scripts\RSA\RSA.733install.enable\servers.txt
+
+
+foreach ($server in $servers)
+{
+
+$systemdrive = Get-WMIObject -class Win32_OperatingSystem -Computername $server | select-object -expandproperty SystemDrive
+
+$Remotesystemdrive = $systemdrive.replace(':','$')
+
+   
+  Copy-Item "\\server name with FQDN\Sources\RSA_Authentication_Agent_X.3.3\Configuration Wizard\RSA Authentication Agent x64_733auto.msi" -Destination "\\$server\$Remotesystemdrive\temp" -Force -Recurse
+   
+    $script= {cmd.exe /c msiexec /i  "c:\temp\RSA Authentication Agent x64_733auto.msi" /norestart }
+              
+    Invoke-Command -ComputerName $server -ScriptBlock $Script  -ErrorAction Continue
+
+    Remove-Item –path "\\$server\$Remotesystemdrive\temp\RSA Authentication Agent x64_733auto.msi"
+
+    #------------------------------------------------------------------------------------------------------------------#
+                   # Removing the msi and reg files after excuted the RSA task on the all servers#
+    #------------------------------------------------------------------------------------------------------------------#
+
+    Copy-Item "\\server name with FQDN\Sources\SRV\Production Packages\rsaenablebpcnprod.reg" -Destination "\\$server\$Remotesystemdrive\temp" -Force -Recurse
+     
+    $script={cmd.exe /c "regedit /s C:\temp\rsaenablebpcnprod.reg" }      
+ 
+    Invoke-Command -ComputerName $server -ScriptBlock $Script  -ErrorAction Continue
+
+    Remove-Item –path "\\$server\$Remotesystemdrive\temp\rsaenablebpcnprod.reg"
+   
+        }
+  ============================================================================================================================================
+
+OUTPUT
+
+please prepare the attached document which contains output result screen share
+
+CLIENT BENEFIT VALUE
+
+By suing the powershell script we get RSA install and configure remote the multiple windows servers.  This will help us to reduce the manual effort and avoid human error
+
+1.    RSA installation.
+2.    The  “server.cer”  file  and  “sdconf.rec”  file configured as single pack using configuration wizard.
+3.    Reserve password update.
+4.    Security group update as per the user request through already exported reg. file or manually created file for security group.
+5.    RSA enable/disable/any special security groups as per the user request.
+6.    After install RSA on the particular server through the (.msi) file,   the msi file will remove it automatically from the particular server.
+7.    After install RSA on the particular server,  the exported registry file (.reg) or you can created manual file for security group file also removed on the particular server.
+
+for any support or assistance please reach out to us.
+
+
+=============================================================================================================================================
+
+ 
