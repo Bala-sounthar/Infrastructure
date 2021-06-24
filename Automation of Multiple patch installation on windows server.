@@ -1,0 +1,26 @@
+Write simple powershell script as below and save as .ps1
+
+================================================
+
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+$dir = (Get-Item -Path ".\" -Verbose).FullName
+Foreach($item in (ls $dir *.msu -Name))
+{
+    echo $item
+    $item = $dir + "\" + $item
+    wusa $item /quiet /norestart | Out-Null
+}
+
+=================================================
+
+Output:
+
+Multiple patch will be installed by clicking powershell script and then manually need to reboot if applicable.
+
+Client Benefit:
+
+To minimize the manual effort and by click powershell script can be installed multiple patches on targeted windows server.
+
+
+ 
+
