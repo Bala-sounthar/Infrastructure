@@ -1,0 +1,19 @@
+Please follow the step by step power shell command as below to capture the Symantec Version check on multiple remote Servers
+
+===========================================================================================================
+$computers = Get-Content "D:\data\symantec\computers.txt"
+        
+           foreach ($computer in $computers)
+          {
+            if ( Test-Connection -ComputerName $computer -Count 1 -ErrorAction SilentlyContinue )
+          {
+           
+          
+           Get-WmiObject -Class Win32_Product -ComputerName $computer -Filter "Name like 'symantec%'" | Select-Object @{Name='Date';Expression={Get-Date -UFormat "%Y/%m/%d-%H:%M:%S"}}, Version, @{Name='Computername';Expression={$computer}} | Export-CSV 'D:\data\symantec\lane18-symantecversion.csv' -Append -NoTypeInformation
+    
+        #Get-ItemProperty -Class Win32_Product -ComputerName $computer -Path Registry::HKEY_LOCAL_MACHINE\SOFTWARE\RSA\RSA Desktop Preferences\Local Authentication Settings\ "Name like 'ChallengeGroup%'" | Select-Object @{Name='Date';Expression={Get-Date -UFormat "%Y/%m/%d-%H:%M:%S"}}, Version, @{Name='Computername';Expression={$computer}} | Export-CSV 'D:\data\RSA\version\rsa.csv' -Append -NoTypeInformation        
+        
+          }
+             else {
+                Write-output "$computer - SYMANTEC  version can't find"
+                  }
